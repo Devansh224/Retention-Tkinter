@@ -5,9 +5,32 @@ from mysql.connector import Error
 DB_CONFIG = {
     "host": "localhost",
     "user": "root",        
-    "password": "DD24World", 
+    "password": "", 
     "database": "retention"
 }
+
+
+def create_database_if_not_exists():
+    """Create the database if it doesn't exist"""
+    try:
+        # Connect without specifying database
+        conn = mysql.connector.connect(
+            host=DB_CONFIG["host"],
+            user=DB_CONFIG["user"],
+            password=DB_CONFIG["password"]
+        )
+        cursor = conn.cursor()
+        
+        # Create database if it doesn't exist
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_CONFIG['database']}")
+        print(f"Database '{DB_CONFIG['database']}' is ready.")
+        
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"Error creating database: {e}")
+        return False
 
 
 def create_connection():
@@ -24,6 +47,13 @@ cursor = None
 
 def initialise_db():
     global conn, cursor
+    
+    # First, ensure the database exists
+    if not create_database_if_not_exists():
+        print("Failed to create/access database.")
+        return
+    
+    # Now connect to the database
     conn = create_connection()
     if conn is None:
         print(f"Could not connect to '{DB_CONFIG['database']}' database.")
@@ -136,7 +166,7 @@ def initialise_db():
     conn.commit()
     cursor.close()
     conn.close()
-    print("All tables initialised.")
+    print("All tables initialised successfully!")
 
 def close_connection(con, cur):
     if cur:
