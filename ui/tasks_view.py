@@ -96,22 +96,22 @@ class TasksView(ctk.CTkFrame):
             return
 
         row = 0
-        for tid, title, desc, subject_id, chapter_id, completed in tasks:
+        for task in tasks:
             card = ctk.CTkFrame(self.list_frame, corner_radius=8, fg_color=self.theme.BG_COLOR)
             card.grid(row=row, column=0, sticky="ew", padx=12, pady=4)
             card.grid_columnconfigure(0, weight=1)
             row += 1
 
             # Title
-            lbl = ctk.CTkLabel(card, text=title)
+            lbl = ctk.CTkLabel(card, text=task["title"])
             self.theme.style_label(lbl, size=14)
             lbl.grid(row=0, column=0, sticky="w", padx=10, pady=(4,0))
 
             # Info line
             info_parts = []
-            if subject_id: info_parts.append(f"Subject {subject_id}")
-            if chapter_id: info_parts.append(f"Chapter {chapter_id}")
-            if desc: info_parts.append(desc)
+            if task["subject_name"]: info_parts.append(task["subject_name"])
+            if task["chapter_name"]: info_parts.append(task["chapter_name"])
+            if task["description"]: info_parts.append(task["description"])
 
             if info_parts:
                 info_lbl = ctk.CTkLabel(card, text=" | ".join(info_parts), text_color=self.theme.SUBTEXT)
@@ -119,15 +119,17 @@ class TasksView(ctk.CTkFrame):
                 info_lbl.grid(row=1, column=0, sticky="w", padx=10, pady=(0,4))
 
             # Actions
-            if completed:
+            if task["completed"]:
                 status_lbl = ctk.CTkLabel(card, text="✔ Done", text_color=self.theme.SUCCESS)
                 status_lbl.grid(row=0, column=1, rowspan=2, sticky="e", padx=10)
             else:
-                done_btn = ctk.CTkButton(card, text="✔", width=40, command=lambda t=tid: self._mark_done(t))
+                done_btn = ctk.CTkButton(card, text="✔", width=40,
+                                        command=lambda t=task["id"]: self._mark_done(t))
                 self.theme.style_button(done_btn)
                 done_btn.grid(row=0, column=1, sticky="e", padx=6)
 
-                del_btn = ctk.CTkButton(card, text="🗑", width=40, command=lambda t=tid: self._delete_task(t))
+                del_btn = ctk.CTkButton(card, text="🗑", width=40,
+                                        command=lambda t=task["id"]: self._delete_task(t))
                 self.theme.style_button(del_btn)
                 del_btn.configure(fg_color=self.theme.ERROR, hover_color="#aa0000")
                 del_btn.grid(row=1, column=1, sticky="e", padx=6)

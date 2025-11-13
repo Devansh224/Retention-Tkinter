@@ -5,13 +5,11 @@ from ui.register_ui import RegisterUI
 from auth import authenticate_user
 from ui.dashboard_ui import DashboardUI
 
-class LoginUI(ctk.CTk):
-    def __init__(self):
-        super().__init__()
+class LoginUI(ctk.CTkFrame):
+    def __init__(self, parent, theme=None):
+        super().__init__(parent)
         Theme.set_theme()
-        self.title("Retention - Login")
-        self.geometry("1200x700")
-        self.minsize(900, 600)
+        self.theme = theme or Theme
 
         # Grid: banner heavier than form
         self.grid_columnconfigure(0, weight=3)   # banner ~65–70%

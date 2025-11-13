@@ -1,9 +1,9 @@
 import customtkinter as ctk
+from ui.home_view import HomeView
 from ui.flashcards_view import FlashcardsView
 from ui.subjects_view import SubjectsView
 from ui.tasks_view import TasksView  
 from ui.theme import Theme
-from ui.home_view import HomeView
 
 class DashboardUI(ctk.CTkFrame):
     def __init__(self, parent, user, theme=None):
@@ -60,10 +60,11 @@ class DashboardUI(ctk.CTkFrame):
         ctk.CTkLabel(self.sidebar, text="").grid(row=99, column=0)
 
         # Footer
-        btn_logout = ctk.CTkButton(self.sidebar, text="🚪 Logout", command=lambda: None)
+        btn_logout = ctk.CTkButton(self.sidebar, text="🚪 Logout", command=self.logout)
         self.theme.style_button(btn_logout)
         btn_logout.configure(fg_color=self.theme.ERROR, hover_color="#aa0000")
         btn_logout.grid(row=100, column=0, padx=12, pady=(0, 20), sticky="ew")
+
 
         # Main content
         self.main_frame = ctk.CTkFrame(self, fg_color=self.theme.BG_COLOR)
@@ -92,3 +93,9 @@ class DashboardUI(ctk.CTkFrame):
     def show_tasks(self):
         self.clear_main()
         TasksView(self.main_frame, self.user["id"], self.theme).pack(fill="both", expand=True)
+    
+    def logout(self):
+        self.destroy()
+        from ui.login_ui import LoginUI
+        LoginUI(self.master).pack(fill="both", expand=True)
+

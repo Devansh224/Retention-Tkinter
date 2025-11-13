@@ -9,18 +9,28 @@ def add_task(user_id, title, description=None, subject_id=None, chapter_id=None)
     conn.commit(); cur.close(); conn.close()
 
 def get_tasks(user_id, only_pending=False):
-    conn = create_connection(); cur = conn.cursor()
+    conn = create_connection()
+    cur = conn.cursor(dictionary=True)
+
     query = """
-        SELECT id, title, description, subject_id, chapter_id, completed
-        FROM tasks WHERE user_id=%s
+        SELECT t.id, t.title, t.description, t.completed,
+               s.name AS subject_name,
+               c.name AS chapter_name
+        FROM tasks t
+        LEFT JOIN subjects s ON t.subject_id = s.id
+        LEFT JOIN chapters c ON t.chapter_id = c.id
+        WHERE t.user_id = %s
     """
     if only_pending:
-        query += " AND completed=FALSE"
-    query += " ORDER BY created_at DESC"
+        query += " AND t.completed = FALSE"
+    query += " ORDER BY t.created_at DESC"
+
     cur.execute(query, (user_id,))
     tasks = cur.fetchall()
     cur.close(); conn.close()
     return tasks
+
+
 
 def mark_task_done(task_id):
     conn = create_connection(); cur = conn.cursor()

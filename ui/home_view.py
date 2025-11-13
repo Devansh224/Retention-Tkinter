@@ -6,6 +6,11 @@ from tasks import get_tasks
 from flashcards import get_due_flashcards
 import random
 
+def load_tips():
+    with open("tips.txt", "r", encoding="utf-8") as f:
+        tips = [line.strip() for line in f if line.strip()]
+    return tips
+
 class HomeView(ctk.CTkFrame):
     def __init__(self, parent, user_id, theme=None, username="User",
                  on_subjects=None, on_tasks=None, on_flashcards=None):
@@ -86,12 +91,7 @@ class HomeView(ctk.CTkFrame):
         inspiration_frame = ctk.CTkFrame(self, corner_radius=12, fg_color=self.theme.FG_COLOR)
         inspiration_frame.grid(row=4, column=0, padx=20, pady=(0, 20), sticky="ew")
 
-        tips = [
-            "💡 Tip: Small consistent steps beat big bursts.",
-            "💡 Tip: Review flashcards daily to build long-term memory.",
-            "💡 Tip: Break tasks into chapters for easier progress.",
-            "💡 Tip: Celebrate small wins to stay motivated."
-        ]
+        tips = load_tips()
 
         inspo_lbl = ctk.CTkLabel(inspiration_frame,
                                  text=random.choice(tips),
@@ -112,16 +112,24 @@ class HomeView(ctk.CTkFrame):
         tasks_all = get_tasks(self.user_id)
         if not tasks_all:
             ctk.CTkLabel(activity_frame, text="No tasks yet.",
-                         font=self.theme.BODY, text_color=self.theme.SUBTEXT).grid(
+                        font=self.theme.BODY, text_color=self.theme.SUBTEXT).grid(
                 row=1, column=0, padx=12, pady=6, sticky="w"
             )
         else:
             for i, task in enumerate(tasks_all[:3]):
-                _, title, desc, _, _, completed = task
-                text = f"✔ {title}" if completed else f"⏳ {title}"
+                title = task["title"]
+                completed = task["completed"]
+                subj = task.get("subject_name") or "—"
+                chap = task.get("chapter_name") or "—"
+
+                # Build display text
+                status_icon = "✔" if completed else "⏳"
+                text = f"{status_icon} {title} | {subj}: {chap}"
+
                 lbl = ctk.CTkLabel(activity_frame, text=text,
-                                   font=self.theme.BODY, text_color=self.theme.SUBTEXT)
+                                font=self.theme.BODY, text_color=self.theme.SUBTEXT)
                 lbl.grid(row=i+1, column=0, padx=12, pady=2, sticky="w")
+
 
         # ---- Flashcards Due ----
         flash_frame = ctk.CTkFrame(self, corner_radius=12, fg_color=self.theme.FG_COLOR)
