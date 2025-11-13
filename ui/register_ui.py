@@ -3,15 +3,15 @@ from PIL import Image
 from ui.theme import Theme
 from auth import register_user
 
-class RegisterUI(ctk.CTkToplevel):
+class RegisterUI(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
         Theme.set_theme()
-        self.title("Retention - Register")
+        # self.title("Retention - Register")
         
-        self.geometry("1200x700")
-        self.minsize(900, 600)
+        # self.geometry("1200x700")
+        # self.minsize(900, 600)
 
         self.grid_columnconfigure(0, weight=3)   # banner ~65–70%
         self.grid_columnconfigure(1, weight=2)   # form ~30–35%
@@ -87,5 +87,7 @@ class RegisterUI(ctk.CTkToplevel):
             self.status.configure(text=msg, text_color=Theme.ERROR)
 
     def close(self):
-        self.destroy()
-        self.parent.deiconify()
+        from ui.login_ui import LoginUI
+        self.pack_forget()
+        login_frame = LoginUI(self.parent)
+        login_frame.pack(fill="both", expand=True)

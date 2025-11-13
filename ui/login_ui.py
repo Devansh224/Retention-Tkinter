@@ -74,9 +74,13 @@ class LoginUI(ctk.CTkFrame):
             self.status.configure(text=result, text_color=Theme.ERROR)
 
     def open_register(self):
-        self.withdraw()
-        reg = RegisterUI(self)   # pass self as parent
-        reg.grab_set()      
+        self.pack_forget()  # hide login frame
+        register_frame = RegisterUI(self.master)
+        register_frame.pack(fill="both", expand=True)
+
+
+
+
 
 
 

@@ -5,7 +5,7 @@ from mysql.connector import Error
 DB_CONFIG = {
     "host": "localhost",
     "user": "root",        
-    "password": "", 
+    "password": "DD24World", 
     "database": "retention"
 }
 
