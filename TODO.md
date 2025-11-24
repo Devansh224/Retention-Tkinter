@@ -1,0 +1,14 @@
+- [x] Chapters in Subjects \rightarrow Flashcards: Chapters Fix
+- [x] Enter key in login
+- [x] Change theme of create and review
+- [x] Update Due Today in review tab once each flashcard is done
+- [x] Show subject name and chapter name in task view
+- [x] Filter Subjects in Review
+- [x] Add Time too - Skip, Forgot etc...
+- [x] Fix new chapters not getting added when a new subject is created
+- [x] Fix Flashcard View not comming properly in your normal window
+- ~~[ ] Add "All" Flashcards~~
+- [x] Change color of Add Chapter in Subjects View
+- [] Change icon
+- [x] Make the UI Color Scheme More mature
+- [ ] Subtle animations

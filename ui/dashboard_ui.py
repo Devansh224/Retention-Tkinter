@@ -87,8 +87,13 @@ class DashboardUI(ctk.CTkFrame):
 
     def show_flashcards(self, subject_id=None, chapter_id=None):
         self.clear_main()
-        FlashcardsView(self.main_frame, self.user["id"], self.theme,
-                       subject_id=subject_id, chapter_id=chapter_id).pack(fill="both", expand=True)
+        FlashcardsView(
+            self.main_frame,
+            self.user["id"],
+            self.theme,
+            subject_id=subject_id,
+            chapter_id=chapter_id
+        ).pack(fill="both", expand=True)
 
     def show_tasks(self):
         self.clear_main()

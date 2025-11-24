@@ -11,20 +11,31 @@ def add_flashcard(user_id: int, subject_id: int, chapter_id: int, front: str, ba
     conn.commit(); cur.close(); conn.close(); return True
 
 # 2) Get flashcards for subject/chapter
-def get_flashcards(user_id: int, subject_id: int, chapter_id: int = None):
+def get_flashcards(user_id: int, subject_id: int = None, chapter_id: int = None):
     conn = create_connection(); cur = conn.cursor()
+
     if chapter_id:
         cur.execute("""
-            SELECT id, front, back, next_review_date
-            FROM flashcards
-            WHERE user_id=%s AND subject_id=%s AND chapter_id=%s
-        """, (user_id, subject_id, chapter_id))
+            SELECT f.id, f.front, f.back, f.next_review_date, f.tags
+            FROM flashcards f
+            WHERE f.user_id=%s AND f.chapter_id=%s
+            ORDER BY f.next_review_date
+        """, (user_id, chapter_id))
+    elif subject_id:
+        cur.execute("""
+            SELECT f.id, f.front, f.back, f.next_review_date, f.tags
+            FROM flashcards f
+            WHERE f.user_id=%s AND f.subject_id=%s
+            ORDER BY f.next_review_date
+        """, (user_id, subject_id))
     else:
         cur.execute("""
-            SELECT id, front, back, next_review_date
-            FROM flashcards
-            WHERE user_id=%s AND subject_id=%s
-        """, (user_id, subject_id))
+            SELECT f.id, f.front, f.back, f.next_review_date, f.tags
+            FROM flashcards f
+            WHERE f.user_id=%s
+            ORDER BY f.next_review_date
+        """, (user_id,))
+
     rows = cur.fetchall(); cur.close(); conn.close()
     return rows
 

@@ -3,6 +3,7 @@ from flashcards import add_flashcard, get_flashcards, get_due_flashcards, update
 from db_connection import create_connection
 from subjects import get_subjects
 from chapters import get_chapters
+from datetime import timedelta
 
 class FlashcardsView(ctk.CTkFrame):
     def __init__(self, parent, user_id, theme, subject_id=None, chapter_id=None):
@@ -11,6 +12,8 @@ class FlashcardsView(ctk.CTkFrame):
         self.theme = theme
         self.subject_id = subject_id
         self.chapter_id = chapter_id
+        self.flashcards = get_flashcards(user_id, subject_id, chapter_id)
+        print("Fetched flashcards:", len(self.flashcards), "cards")
 
         # ---------------- DASHBOARD HEADER ----------------
         header = ctk.CTkFrame(self, corner_radius=10, fg_color=theme.FG_COLOR)
@@ -50,11 +53,31 @@ class FlashcardsView(ctk.CTkFrame):
         self.performance_labels = {}
 
         # ---------------- TABVIEW ----------------
-        self.tabs = ctk.CTkTabview(self)
-        # self.theme.style_frame(self.tabs)
+        self.tabs = ctk.CTkTabview(
+            self,
+            fg_color=self.theme.FG_COLOR,   # background of the tabview
+            corner_radius=8
+        )
+        self.tabs.pack(fill="both", expand=True, padx=20, pady=20)
 
+        # Style the tab buttons (active vs inactive)
+        self.tabs._segmented_button.configure(
+            corner_radius=8,
+            fg_color=self.theme.FG_COLOR,          # inactive tab background
+            selected_color=self.theme.ACCENT,      # active tab background (bluish accent)
+            selected_hover_color=self.theme.HOVER_COLOR,  # hover on active tab
+            unselected_color=self.theme.FG_COLOR,  # inactive tab background
+            unselected_hover_color="#2a2a2a",      # hover on inactive tab
+            text_color=self.theme.TEXT_COLOR       # text color for all tabs
+        )
+
+        # Add tabs
         self.create_tab = self.tabs.add("➕ Create")
         self.review_tab = self.tabs.add("📖 Review")
+
+        # Make tab content match background
+        self.create_tab.configure(fg_color=self.theme.BG_COLOR)
+        self.review_tab.configure(fg_color=self.theme.BG_COLOR)
 
         self.tabs.pack(fill="both", expand=True, padx=20, pady=20)  # make sure it shows up
 
@@ -102,16 +125,42 @@ class FlashcardsView(ctk.CTkFrame):
         ctk.CTkLabel(self.right_panel, text=subjects_text,
                     font=self.theme.BODY, text_color=self.theme.TEXT_COLOR).pack(anchor="w", pady=2)
 
-    # ...existing code...
+    def _format_interval(self, outcome: str) -> str:
+        intervals = {
+            "forgot": timedelta(days=1),
+            "partial": timedelta(days=2),
+            "effort": timedelta(days=3),
+            "easy": timedelta(days=5),
+            "skip": timedelta(hours=1)
+        }
+        interval = intervals.get(outcome)
+        if not interval:
+            return ""
+        # Format nicely
+        if interval.days > 0:
+            return f"{interval.days}d"
+        else:
+            hours = interval.seconds // 3600
+            minutes = (interval.seconds % 3600) // 60
+            if hours > 0:
+                return f"{hours}h"
+            else:
+                return f"{minutes}m"
 
+    
+    
     # ---------------- CREATE TAB ----------------
     def _build_create_tab(self):
+        # Wrap entire tab in a scrollable frame
+        create_scroll = ctk.CTkScrollableFrame(self.create_tab, fg_color="transparent")
+        create_scroll.pack(fill="both", expand=True)
+
         subjects = get_subjects(self.user_id)
         subject_names = [s[1] for s in subjects]
         self.subject_map = {s[1]: s[0] for s in subjects}
 
         self.subject_dropdown = ctk.CTkOptionMenu(
-            self.create_tab,
+            create_scroll,
             values=subject_names,
             command=self._on_subject_change
         )
@@ -119,7 +168,7 @@ class FlashcardsView(ctk.CTkFrame):
         self.subject_dropdown.pack(fill="x", padx=20, pady=(20, 10))
 
         self.chapter_dropdown = ctk.CTkOptionMenu(
-            self.create_tab,
+            create_scroll,
             values=["(none)"],
             command=self._on_chapter_change
         )
@@ -127,7 +176,7 @@ class FlashcardsView(ctk.CTkFrame):
         self.chapter_dropdown.pack(fill="x", padx=20, pady=(0, 10))
 
         self.cards_frame = ctk.CTkScrollableFrame(
-            self.create_tab, corner_radius=8, fg_color=self.theme.FG_COLOR
+            create_scroll, corner_radius=8, fg_color=self.theme.FG_COLOR
         )
         self.cards_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -144,15 +193,15 @@ class FlashcardsView(ctk.CTkFrame):
                                 break
                     break
 
-        self.front_entry = ctk.CTkEntry(self.create_tab, placeholder_text="Front (Question)")
+        self.front_entry = ctk.CTkEntry(create_scroll, placeholder_text="Front (Question)")
         self.theme.style_entry(self.front_entry)
         self.front_entry.pack(fill="x", padx=20, pady=(10, 6))
 
-        self.back_entry = ctk.CTkEntry(self.create_tab, placeholder_text="Back (Answer)")
+        self.back_entry = ctk.CTkEntry(create_scroll, placeholder_text="Back (Answer)")
         self.theme.style_entry(self.back_entry)
         self.back_entry.pack(fill="x", padx=20, pady=(0, 6))
 
-        self.tags_entry = ctk.CTkEntry(self.create_tab, placeholder_text="Tags (optional)")
+        self.tags_entry = ctk.CTkEntry(create_scroll, placeholder_text="Tags (optional)")
         self.theme.style_entry(self.tags_entry)
         self.tags_entry.pack(fill="x", padx=20, pady=(0, 10))
 
@@ -180,11 +229,11 @@ class FlashcardsView(ctk.CTkFrame):
             self._refresh_flashcards(subject_id, chapter_id)
             self._load_next_card()
 
-        add_btn = ctk.CTkButton(self.create_tab, text="Save Flashcard", command=on_add)
+        add_btn = ctk.CTkButton(create_scroll, text="Save Flashcard", command=on_add)
         self.theme.style_button(add_btn)
         add_btn.pack(pady=20)
 
-        self._refresh_flashcards()
+        self._refresh_flashcards(self.subject_id, self.chapter_id)
 
     # ...existing code...
         
@@ -203,14 +252,17 @@ class FlashcardsView(ctk.CTkFrame):
                         text_color=self.theme.SUBTEXT, font=self.theme.BODY).pack(pady=10)
             return
 
-        for cid, front, back, next_date in cards:
+        for cid, front, back, next_date, tags in cards:
             card = ctk.CTkFrame(self.cards_frame, corner_radius=6, fg_color=self.theme.BG_COLOR)
             card.pack(fill="x", padx=10, pady=6)
 
             ctk.CTkLabel(card, text=f"Q: {front}", font=self.theme.SUBHEADER,
                         text_color=self.theme.TEXT_COLOR).pack(anchor="w", padx=10, pady=(4,0))
             ctk.CTkLabel(card, text=f"A: {back}", font=self.theme.BODY,
-                        text_color=self.theme.TEXT_COLOR).pack(anchor="w", padx=10, pady=(0,4))
+                        text_color=self.theme.TEXT_COLOR).pack(anchor="w", padx=10, pady=(0,4)) 
+            tag_text = tags if tags else "No Tags"
+            ctk.CTkLabel(card, text=f"🏷 {tag_text}", font=self.theme.SMALL,
+                 text_color=self.theme.SUBTEXT).pack(anchor="w", padx=10, pady=(0,4))
             ctk.CTkLabel(card, text=f"Next Review: {next_date}", font=self.theme.SMALL, 
                         text_color=self.theme.SUBTEXT).pack(anchor="w", padx=10, pady=(0,4))
         
@@ -223,14 +275,22 @@ class FlashcardsView(ctk.CTkFrame):
         chapters = get_chapters(self.user_id, self.subject_id) if self.subject_id else []
         if chapters:
             self.chapter_dropdown.configure(values=[c[1] for c in chapters])
-            self.chapter_dropdown.set("(none)")
+            # If we already have a chapter_id, set it; else default to "(none)"
+            if self.chapter_id:
+                for cid, cname in chapters:
+                    if cid == self.chapter_id:
+                        self.chapter_dropdown.set(cname)
+                        break
+            else:
+                self.chapter_dropdown.set("(none)")
         else:
             self.chapter_dropdown.configure(values=["(none)"])
             self.chapter_dropdown.set("(none)")
+            self.chapter_id = None
 
-        self.chapter_id = None
-        self._refresh_flashcards(self.subject_id, None)
+        self._refresh_flashcards(self.subject_id, self.chapter_id)
         self._update_dashboard()
+
 
     def _on_chapter_change(self, selected_name: str):
         if not self.subject_id:
@@ -253,23 +313,62 @@ class FlashcardsView(ctk.CTkFrame):
         stats_frame = ctk.CTkFrame(self.review_tab, fg_color=self.theme.FG_COLOR, corner_radius=10)
         stats_frame.pack(fill="x", padx=20, pady=(20,10))
 
+        # Get subjects for dropdown
+        subjects = get_subjects(self.user_id)
+        subject_names = [s[1] for s in subjects]
+        self.subject_map = {s[1]: s[0] for s in subjects}
+
+        # Current due cards count
         due_cards = get_due_flashcards(self.user_id, self.subject_id, self.chapter_id)
         total_due = len(due_cards)
+
         subj_name = "All Subjects"
         if self.subject_id:
-            subjects = get_subjects(self.user_id)
             subj_name = next((s[1] for s in subjects if s[0] == self.subject_id), subj_name)
 
-        ctk.CTkLabel(stats_frame, text=f"📊 Due Today: {total_due}", 
-                    font=self.theme.SECTION, text_color=self.theme.TEXT_COLOR).pack(side="left", padx=10, pady=10)
-        ctk.CTkLabel(stats_frame, text=f"📚 Subject: {subj_name}", 
-                    font=self.theme.BODY, text_color=self.theme.TEXT_COLOR).pack(side="left", padx=10)
+        # Stats labels
+        self.due_today_label = ctk.CTkLabel(
+            stats_frame,
+            text=f"📊 Due Today: {total_due}",
+            font=self.theme.SECTION,
+            text_color=self.theme.TEXT_COLOR
+        )
+        self.due_today_label.pack(side="left", padx=10, pady=10)
 
+        # Subject filter dropdown
+        self.review_subject_dropdown = ctk.CTkOptionMenu(
+            stats_frame,
+            values=["All Subjects"] + subject_names,
+            command=self._on_review_subject_change
+        )
+        self.theme.style_optionmenu(self.review_subject_dropdown)
+        self.review_subject_dropdown.pack(side="right", padx=10, pady=10)
+
+        # Default selection
+        if self.subject_id:
+            for name, sid in self.subject_map.items():
+                if sid == self.subject_id:
+                    self.review_subject_dropdown.set(name)
+                    break
+        else:
+            self.review_subject_dropdown.set("All Subjects")
+
+        # Review frame
         self.review_frame = ctk.CTkFrame(self.review_tab, corner_radius=8, fg_color=self.theme.FG_COLOR)
         self.review_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
+        # Buttons frame
         btn_frame = ctk.CTkFrame(self.review_tab, fg_color="transparent")
         btn_frame.pack(pady=20)
+
+        # Outcome intervals
+        intervals = {
+            "forgot": timedelta(days=1),
+            "partial": timedelta(days=2),
+            "effort": timedelta(days=3),
+            "easy": timedelta(days=5),
+            "skip": timedelta(hours=1)
+        }
 
         outcomes = [
             ("❌ Forgot", "forgot"),
@@ -280,8 +379,19 @@ class FlashcardsView(ctk.CTkFrame):
         ]
 
         for text, outcome in outcomes:
-            btn = ctk.CTkButton(btn_frame, text=text,
-                        command=lambda o=outcome: self._handle_review(o))
+            interval = intervals[outcome]
+            if interval.days > 0:
+                interval_text = f"{interval.days}d"
+            else:
+                hours = interval.seconds // 3600
+                minutes = (interval.seconds % 3600) // 60
+                interval_text = f"{hours}h" if hours else f"{minutes}m"
+
+            btn = ctk.CTkButton(
+                btn_frame,
+                text=f"{text} ({interval_text})",
+                command=lambda o=outcome: self._handle_review(o)
+            )
             self.theme.style_button(btn)
             btn.pack(side="left", padx=6)
 
@@ -341,3 +451,18 @@ class FlashcardsView(ctk.CTkFrame):
 
         self._load_next_card()
         self._update_dashboard()
+        self._update_due_today()
+    def _on_review_subject_change(self, selected_name: str):
+        if selected_name == "All Subjects":
+            self.subject_id = None
+            self.chapter_id = None
+        else:
+            self.subject_id = self.subject_map.get(selected_name)
+            self.chapter_id = None  # reset chapter filter when subject changes
+        self._load_next_card()
+        self._update_dashboard()
+    def _update_due_today(self):
+        due_cards = get_due_flashcards(self.user_id, self.subject_id, self.chapter_id)
+        total_due = len(due_cards)
+        self.due_today_label.configure(text=f"📊 Due Today: {total_due}")
+

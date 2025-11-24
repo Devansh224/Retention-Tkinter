@@ -1,18 +1,18 @@
 import customtkinter as ctk
 
 class Theme:
-    # Colors
-    BG_COLOR = "#1E1E2F"
-    FG_COLOR = "#2E2E3E"
-    ACCENT = "#5952DB"
-    TEXT_COLOR = "#F2F2F2"
-    SUBTEXT = "#A6A6A6"
-    SUCCESS = "#00C896"
-    ERROR = "#FF5C5C"
-    HOVER_COLOR = "#5750D6"
-    BUTTON_HOVER = "#50555f"
+    # Modern Dark Colors
+    BG_COLOR = "#121212"       # true dark background
+    FG_COLOR = "#1E1E1E"       # surface panels/cards
+    ACCENT = "#306ED8"         # vibrant modern blue
+    TEXT_COLOR = "#E5E7EB"     # soft off-white text
+    SUBTEXT = "#9CA3AF"        # muted gray for secondary info
+    SUCCESS = "#22C55E"        # modern green
+    ERROR = "#EF4444"          # crisp red
+    HOVER_COLOR = "#2858DB"    # brighter blue hover
+    BUTTON_HOVER = "#374151"   # subtle gray hover for option menus
 
-    # Fonts
+    # Fonts (modern system look)
     HEADER = ("Segoe UI", 24, "bold")
     SUBHEADER = ("Segoe UI", 18, "bold")
     BODY = ("Segoe UI", 13)
@@ -31,7 +31,7 @@ class Theme:
         button.configure(
             fg_color=Theme.ACCENT,
             hover_color=Theme.HOVER_COLOR,
-            text_color="white",
+            text_color=Theme.TEXT_COLOR,
             corner_radius=10,
             font=Theme.BODY
         )
@@ -41,7 +41,7 @@ class Theme:
         entry.configure(
             fg_color=Theme.FG_COLOR,
             border_color=Theme.ACCENT,
-            border_width=1,
+            border_width=0,  # flat until focus
             text_color=Theme.TEXT_COLOR,
             font=Theme.BODY,
             corner_radius=8
@@ -58,13 +58,15 @@ class Theme:
     def style_optionmenu(menu):
         menu.configure(
             fg_color=Theme.FG_COLOR,
-            button_color="#3a3f4a",
+            button_color="#2D2D2D",
             button_hover_color=Theme.BUTTON_HOVER,
-            text_color="white"
+            text_color=Theme.TEXT_COLOR
         )
+
+    @staticmethod
     def style_chapter_button(button):
         button.configure(
-            fg_color="#3A3A4F",              # darker shade than FG_COLOR
+            fg_color="#2A2A2A",              # darker shade for chapter buttons
             hover_color=Theme.ACCENT,        # highlight with accent on hover
             text_color=Theme.TEXT_COLOR,
             corner_radius=8,
@@ -73,4 +75,7 @@ class Theme:
 
     @staticmethod
     def style_frame(frame):
-        frame.configure(fg_color=Theme.FG_COLOR, corner_radius=10)
+        frame.configure(
+            fg_color=Theme.FG_COLOR,
+            corner_radius=12
+        )

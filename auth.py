@@ -24,14 +24,20 @@ def register_user(username: str, password: str, email: str | None = None):
         conn.close()
 
 
-def authenticate_user(username: str, password: str):
+def authenticate_user(identifier: str, password: str):
+    """
+    Authenticate a user by either username or email.
+    identifier: can be username OR email
+    password: plain text password entered by user
+    """
     conn = create_connection()
     if conn is None:
         return False, "Database connection failed"
 
     cur = conn.cursor(dictionary=True)
     try:
-        cur.execute("SELECT * FROM users WHERE username=%s", (username,))
+        # Match either username or email
+        cur.execute("SELECT * FROM users WHERE username=%s OR email=%s", (identifier, identifier))
         user = cur.fetchone()
         if not user:
             return False, "User not found"

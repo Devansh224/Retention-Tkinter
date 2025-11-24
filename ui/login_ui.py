@@ -33,7 +33,7 @@ class LoginUI(ctk.CTkFrame):
         Theme.style_label(header, bold=True, size=26)
         header.grid(row=1, column=0, pady=(0, 50))
 
-        self.username = ctk.CTkEntry(form, placeholder_text="Username")
+        self.username = ctk.CTkEntry(form, placeholder_text="Username or Email")
         Theme.style_entry(self.username)
         self.username.grid(row=2, column=0, padx=20, pady=(0, 25), sticky="ew")
 
@@ -53,7 +53,11 @@ class LoginUI(ctk.CTkFrame):
                                      command=self.open_register)
         register_btn.grid(row=6, column=0, pady=(30, 0))
 
-    def on_login(self):
+        self.username.focus_set()
+        self.username.bind("<Return>", self.on_login)
+        self.password.bind("<Return>", self.on_login)
+
+    def on_login(self, event=None):
         u, p = self.username.get().strip(), self.password.get()
         if not u or not p:
             self.status.configure(text="Please enter username and password.", text_color=Theme.ERROR)
