@@ -1,30 +1,27 @@
 import mysql.connector
 from mysql.connector import Error
 
-
 DB_CONFIG = {
     "host": "localhost",
-    "user": "root",        
-    "password": "", 
+    "user": "root",
+    "password": "",
     "database": "retention"
 }
 
-
 def create_database_if_not_exists():
-    """Create the database if it doesn't exist"""
+    # Ensure the database exists; create it if missing.
     try:
-        # Connect without specifying database
+        # Connect without specifying database (so we can create it)
         conn = mysql.connector.connect(
             host=DB_CONFIG["host"],
             user=DB_CONFIG["user"],
             password=DB_CONFIG["password"]
         )
         cursor = conn.cursor()
-        
-        # Create database if it doesn't exist
+
+        # Create database if not exists
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_CONFIG['database']}")
-        print(f"Database '{DB_CONFIG['database']}' is ready.")
-        
+
         cursor.close()
         conn.close()
         return True
@@ -32,34 +29,48 @@ def create_database_if_not_exists():
         print(f"Error creating database: {e}")
         return False
 
-
 def create_connection():
+    # Connect to the database using DB_CONFIG.
     try:
-        # why "**" - unpacks the dictionary into keyword arguments
+        # ** - unpacks dictionary into keyword arguments
         conn = mysql.connector.connect(**DB_CONFIG)
         if conn.is_connected():
             return conn
-    except Error:
+    except Error as e:
+        print(f"Connection error: {e}")
         return None
 
+# for resuing con and cursor everywhere
 conn = None
 cursor = None
 
 def initialise_db():
+    # Initialise all required tables in the database.
     global conn, cursor
-    
-    # First, ensure the database exists
+
+    # Step 1: Ensure database exists
     if not create_database_if_not_exists():
-        print("Failed to create/access database.")
+        print(f"Failed to create database - {DB_CONFIG['database']}")
         return
-    
-    # Now connect to the database
+
+    # Step 2: Connect to database
     conn = create_connection()
     if conn is None:
         print(f"Could not connect to '{DB_CONFIG['database']}' database.")
         return
 
     cursor = conn.cursor()
+
+    # ------------------ TABLE CREATION ------------------
+
+    '''
+    Foreign Key: constraint that links two tables together
+    - ON DELETE CASCADE → Delete child rows automatically when parent is deleted.
+    - ON DELETE SET NULL → Set child foreign key to NULL when parent is deleted.
+    - ON DELETE RESTRICT / NO ACTION → Prevent deletion of parent if child rows exist.
+    - ON UPDATE CASCADE → Update child foreign key values automatically if parent key changes.
+    '''
+
     # Users table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
@@ -81,6 +92,7 @@ def initialise_db():
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
     """)
+
     # Chapters table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS chapters (
@@ -97,22 +109,21 @@ def initialise_db():
     # Flashcards table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS flashcards (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    subject_id INT NOT NULL,
-    chapter_id INT,
-    front TEXT NOT NULL,
-    back TEXT NOT NULL,
-    tags VARCHAR(100),
-    next_review_date DATETIME NOT NULL,            
-    review_interval INT DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
-    FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
-);
-
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        subject_id INT NOT NULL,
+        chapter_id INT,
+        front TEXT NOT NULL,
+        back TEXT NOT NULL,
+        tags VARCHAR(100),
+        next_review_date DATETIME NOT NULL,
+        review_interval INT DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+        FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+    )
     """)
 
     # Tasks table
@@ -130,49 +141,18 @@ def initialise_db():
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
-        FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE               
-    )
-    """)
-
-    # Exams table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS exams (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        subject_id INT NOT NULL,
-        exam_date DATE NOT NULL,
-        description VARCHAR(255),
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
-    )
-    """)
-
-    # Scheduler table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS scheduler (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        flashcard_id INT NOT NULL,
-        next_revision DATETIME NOT NULL,
-        revision_count INT DEFAULT 0,
-        done BOOLEAN DEFAULT FALSE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (flashcard_id) REFERENCES flashcards(id) ON DELETE CASCADE
+        FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
     )
     """)
 
     conn.commit()
     cursor.close()
     conn.close()
-    print("All tables initialised successfully!")
+    print("All tables initialised.")
 
 def close_connection(con, cur):
+    # Safely close cursor and connection.
     if cur:
         cur.close()
     if con:
         con.close()
-
-if __name__ == "__main__":
-    initialise_db()

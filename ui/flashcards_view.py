@@ -13,7 +13,6 @@ class FlashcardsView(ctk.CTkFrame):
         self.subject_id = subject_id
         self.chapter_id = chapter_id
         self.flashcards = get_flashcards(user_id, subject_id, chapter_id)
-        print("Fetched flashcards:", len(self.flashcards), "cards")
 
         # ---------------- DASHBOARD HEADER ----------------
         header = ctk.CTkFrame(self, corner_radius=10, fg_color=theme.FG_COLOR)
