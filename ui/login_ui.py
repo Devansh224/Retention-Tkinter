@@ -49,7 +49,7 @@ class LoginUI(ctk.CTkFrame):
         self.status.grid(row=5, column=0)
 
         register_btn = ctk.CTkButton(form, text="Create Account", fg_color="transparent",
-                                     text_color=Theme.ACCENT, hover_color=Theme.FG_COLOR,
+                                     text_color=Theme.ACCENT_LIGHT, hover_color=Theme.FG_COLOR,
                                      command=self.open_register)
         register_btn.grid(row=6, column=0, pady=(30, 0))
 

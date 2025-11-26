@@ -58,7 +58,7 @@ class RegisterUI(ctk.CTkFrame):
         register_btn.grid(row=7, column=0, padx=20, pady=(0, 35), sticky="ew")
 
         signin_btn = ctk.CTkButton(form, text="Back to Login", fg_color="transparent",
-                                   text_color=Theme.ACCENT, hover_color=Theme.FG_COLOR,
+                                   text_color=Theme.ACCENT_LIGHT, hover_color=Theme.FG_COLOR,
                                    command=self.close)
         signin_btn.grid(row=8, column=0, pady=(30, 0))
 

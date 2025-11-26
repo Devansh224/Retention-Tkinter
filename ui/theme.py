@@ -4,12 +4,15 @@ class Theme:
     # Modern Dark Colors
     BG_COLOR = "#121212"       # true dark background
     FG_COLOR = "#1E1E1E"       # surface panels/cards
-    ACCENT = "#306ED8"         # vibrant modern blue
+    # ACCENT = "#306ED8"         # vibrant modern blue
+    ACCENT = "#4F30D8"         # vibrant modern blue
+    ACCENT_LIGHT = "#6370FF"   # lighter accent for highlights
     TEXT_COLOR = "#E5E7EB"     # soft off-white text
     SUBTEXT = "#9CA3AF"        # muted gray for secondary info
     SUCCESS = "#22C55E"        # modern green
     ERROR = "#EF4444"          # crisp red
-    HOVER_COLOR = "#2858DB"    # brighter blue hover
+    # HOVER_COLOR = "#2858DB"    # brighter blue hover
+    HOVER_COLOR = "#441FCA"    # brighter blue hover
     BUTTON_HOVER = "#374151"   # subtle gray hover for option menus
 
     # Fonts (modern system look)
