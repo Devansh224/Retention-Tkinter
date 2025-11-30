@@ -1,9 +1,10 @@
 import customtkinter as ctk
-from flashcards import add_flashcard, get_flashcards, get_due_flashcards, update_flashcard_review, delete_flashcard
+from flashcards import add_flashcard, get_flashcards, get_due_flashcards, update_flashcard_review, delete_flashcard, export_flashcards_to_csv
 from db_connection import create_connection
 from subjects import get_subjects
 from chapters import get_chapters
 from datetime import timedelta
+from ui.theme import Theme
 
 class FlashcardsView(ctk.CTkFrame):
     def __init__(self, parent, user_id, theme, subject_id=None, chapter_id=None):
@@ -160,7 +161,7 @@ class FlashcardsView(ctk.CTkFrame):
 
         self.subject_dropdown = ctk.CTkOptionMenu(
             create_scroll,
-            values=subject_names,
+            values=["(Select Subject)"] + subject_names,
             command=self._on_subject_change
         )
         self.theme.style_optionmenu(self.subject_dropdown)
@@ -168,12 +169,24 @@ class FlashcardsView(ctk.CTkFrame):
 
         self.chapter_dropdown = ctk.CTkOptionMenu(
             create_scroll,
-            values=["(none)"],
+            values=["(Select Subject First)"],
             command=self._on_chapter_change
         )
         self.theme.style_optionmenu(self.chapter_dropdown)
         self.chapter_dropdown.pack(fill="x", padx=20, pady=(0, 10))
 
+        export_btn = ctk.CTkButton(
+            create_scroll,
+            text="Export to CSV",
+            fg_color=self.theme.FG_COLOR,   # same as parent background
+            text_color=self.theme.ACCENT_LIGHT,
+            hover_color=self.theme.BUTTON_HOVER,
+            width=120,
+            command=lambda: self._export_flashcards()
+        )
+        export_btn.pack(anchor="e", padx=20, pady=(5,5))
+
+        
         self.cards_frame = ctk.CTkScrollableFrame(
             create_scroll, corner_radius=8, fg_color=self.theme.FG_COLOR
         )
@@ -191,7 +204,7 @@ class FlashcardsView(ctk.CTkFrame):
                                 self.chapter_dropdown.set(cname)
                                 break
                     break
-
+        
         self.front_entry = ctk.CTkEntry(create_scroll, placeholder_text="Front (Question)")
         self.theme.style_entry(self.front_entry)
         self.front_entry.pack(fill="x", padx=20, pady=(10, 6))
@@ -465,3 +478,9 @@ class FlashcardsView(ctk.CTkFrame):
         total_due = len(due_cards)
         self.due_today_label.configure(text=f"📊 Due Today: {total_due}")
 
+    def _export_flashcards(self):
+        filename = export_flashcards_to_csv(self.user_id, self.subject_id, self.chapter_id)
+        msg = ctk.CTkLabel(self, text=f"Flashcards exported to {filename}",
+                    font=self.theme.SMALL, text_color=self.theme.SUCCESS)
+        msg.pack(pady=10)
+        self.after(3000, msg.destroy)

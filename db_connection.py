@@ -50,7 +50,7 @@ def initialise_db():
 
     # Step 1: Ensure database exists
     if not create_database_if_not_exists():
-        print(f"Failed to create database - {DB_CONFIG['database']}")
+        print(f"Failed to access database - {DB_CONFIG['database']}")
         return
 
     # Step 2: Connect to database

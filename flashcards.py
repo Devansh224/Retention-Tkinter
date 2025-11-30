@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from db_connection import create_connection
+import csv, os
 
 # 1) Add a new flashcard: due immediately (NOW)
 def add_flashcard(user_id: int, subject_id: int, chapter_id: int, front: str, back: str, tags: str = None):
@@ -99,3 +100,66 @@ def delete_flashcard(card_id):
     cur.execute("DELETE FROM flashcards WHERE id=%s", (card_id,))
     conn.commit()
     cur.close(); conn.close()
+
+# 6) Export flashcards to CSV
+def export_flashcards_to_csv(user_id: int, subject_id: int = None, chapter_id: int = None):
+    conn = create_connection(); cur = conn.cursor()
+
+    # Ensure "Flashcards" folder exists
+    folder = "Flashcards"
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    # Get subject/chapter names for filename
+    subject_name = None
+    chapter_name = None
+
+    if subject_id:
+        cur.execute("SELECT name FROM subjects WHERE id=%s AND user_id=%s", (subject_id, user_id))
+        row = cur.fetchone()
+        if row: subject_name = row[0]
+
+    if chapter_id:
+        cur.execute("SELECT name FROM chapters WHERE id=%s AND subject_id=%s AND user_id=%s", (chapter_id, subject_id, user_id))
+        row = cur.fetchone()
+        if row: chapter_name = row[0]
+
+    # Build base filename inside "Flashcards" folder
+    parts = ["flashcards"]
+    if subject_name: parts.append(subject_name)
+    if chapter_name: parts.append(chapter_name)
+    base_filename = "-".join(parts) + ".csv"
+    filepath = os.path.join(folder, base_filename)
+
+    # Ensure unique filename if already exists
+    filename = filepath
+    counter = 1
+    while os.path.exists(filename):
+        filename = filepath.replace(".csv", f"({counter}).csv")
+        counter += 1
+
+    # Query flashcards
+    query = """
+        SELECT f.id, f.front, f.back, f.tags
+        FROM flashcards f
+        WHERE f.user_id=%s
+    """
+    params = [user_id]
+    if subject_id:
+        query += " AND f.subject_id=%s"
+        params.append(subject_id)
+    if chapter_id:
+        query += " AND f.chapter_id=%s"
+        params.append(chapter_id)
+
+    cur.execute(query, tuple(params))
+    rows = cur.fetchall()
+
+    # Write CSV inside "Flashcards" folder
+    with open(filename, mode="w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow(["ID", "Front", "Back", "Tags"])
+        writer.writerows(rows)
+
+    cur.close(); conn.close()
+    return filename
